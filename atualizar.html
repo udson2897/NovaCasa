@@ -8,13 +8,29 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         .highlight-urgent {
-            background-color: #ffcccc; /* Vermelho claro */
+            background-color: #ffa3a3 !important;
         }
         .highlight-concluded {
-            background-color: #ccffcc; /* Verde claro */
+            background-color: #a3ffa3 !important;
         }
         .highlight-quotation {
-            background-color: #ffffcc; /* Amarelo claro */
+            background-color: #ffffa3 !important;
+        }
+        .highlight-cancelled {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
     </style>
 </head>
@@ -24,15 +40,15 @@
            NOVA CASA<img src="nova_casa.png" class="logo">ADM LIVE
         </h1>
     </div>
-   <div class="menu">
-      <ul>
-       <li><a href="pagina_inicial.html"><i class="bi bi-house"></i>HOME</a></li>
-       <li><a href="formulario.html"><i class="bi bi-ui-checks"></i>FORMULÁRIO DE REQUISIÇÃO</a></li>
-       <li><a href="atualizar.html"><i class="bi bi-arrow-repeat"></i>REQUISIÇÕES</a></li>
-       <li><a href="BI_status.html"><i class="bi bi-bar-chart-fill"></i>B.I STATUS</a></li>
-       <li><a href="BI_Gerencial.html"><i class="bi bi-bar-chart-fill"></i>B.I GERENCIAL</a></li>
-      </ul>
-   </div>
+    <div class="menu">
+        <ul>
+            <li><a href="pagina_inicial.html"><i class="bi bi-house"></i>HOME</a></li>
+            <li><a href="formulario.html"><i class="bi bi-ui-checks"></i>FORMULÁRIO DE REQUISIÇÃO</a></li>
+            <li><a href="atualizar.html"><i class="bi bi-arrow-repeat"></i>REQUISIÇÕES</a></li>
+            <li><a href="BI_status.html"><i class="bi bi-bar-chart-fill"></i>B.I STATUS</a></li>
+            <li><a href="BI_Gerencial.html"><i class="bi bi-bar-chart-fill"></i>B.I GERENCIAL</a></li>
+        </ul>
+    </div>
 
     <h1>Tabela de Requisições</h1>
     <div class="controls">
@@ -43,104 +59,117 @@
     </div>
 
     <script>
-        const supabaseUrl = "https://vvgtuaxymotjbkpqncln.supabase.co"; // Substitua pela sua URL
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2Z3R1YXh5bW90amJrcHFuY2xuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQxMjk4ODYsImV4cCI6MjA0OTcwNTg4Nn0.TRC3a7-2lRt7HLQD3ImnAZmWaiDa4HXtn_mnSIqZwHs"; // Substitua pela sua chave secreta
-        const tableName = "requisicoes"; // Substitua pelo nome da tabela
-        const apiUrl = `${supabaseUrl}/rest/v1/${tableName}`;
-        const headers = {
-            "apikey": supabaseKey,
-            "Authorization": `Bearer ${supabaseKey}`,
-            "Content-Type": "application/json"
+        const CONFIG = {
+            supabaseUrl: "https://vvgtuaxymotjbkpqncln.supabase.co",
+            supabaseKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2Z3R1YXh5bW90amJrcHFuY2xuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQxMjk4ODYsImV4cCI6MjA0OTcwNTg4Nn0.TRC3a7-2lRt7HLQD3ImnAZmWaiDa4HXtn_mnSIqZwHs",
+            tableName: "requisicoes",
+            get apiUrl() {
+                return `${this.supabaseUrl}/rest/v1/${this.tableName}`;
+            },
+            get headers() {
+                return {
+                    "apikey": this.supabaseKey,
+                    "Authorization": `Bearer ${this.supabaseKey}`,
+                    "Content-Type": "application/json"
+                };
+            }
         };
 
-        let originalData = []; // Armazena os dados originais para busca
+        let tableData = [];
+        const container = document.getElementById('tabela-container');
 
         function formatValue(value) {
             return value !== null && value !== undefined ? value : "";
         }
 
         function normalizeText(text) {
-            return text ? text.trim().toLowerCase() : "";
+            return text ? String(text).trim().toLowerCase() : "";
         }
 
-        function generateTable(data) {
-            let tableHTML = "<table><thead><tr>";
-            const headers = Object.keys(data[0]);
-            headers.forEach(header => {
-                tableHTML += `<th>${header}</th>`;
-            });
-            tableHTML += "<th>Ações</th></tr></thead><tbody>";
+        function getRowClass(row) {
+            const isUrgent = normalizeText(row.urgente) === "sim";
+            const status = normalizeText(row.status_requisicao);
 
-            data.forEach((row, rowIndex) => {
-                const isUrgent = normalizeText(row.urgente) === "sim";
-                const isConcluded = normalizeText(row.status_requisicao) === "concluída";
-                const isInQuotation = normalizeText(row.status_requisicao) === "em cotação";
-
-                let rowClass = "";
-                if (isUrgent) {
-                    rowClass = "highlight-urgent";
-                } else if (isConcluded) {
-                    rowClass = "highlight-concluded";
-                } else if (isInQuotation) {
-                    rowClass = "highlight-quotation";
-                }
-
-                tableHTML += `<tr class="${rowClass}">`;
-                headers.forEach(header => {
-                    if (header === "status_requisicao") {
-                        tableHTML += `
-                            <td>
-                                <select onchange="updateValue(${rowIndex}, '${header}', this.value)">
-                                    <option value="" ${row[header] === "" ? "selected" : ""}></option>
-                                    <option value="em cotação" ${row[header] === "em cotação" ? "selected" : ""}>em cotação</option>
-                                    <option value="concluída" ${row[header] === "concluída" ? "selected" : ""}>concluída</option>
-                                    <option value="cancelada" ${row[header] === "cancelada" ? "selected" : ""}>cancelada</option>
-                                </select>
-                            </td>
-                        `;
-                    } else if (header === "valor_requisicao") {
-                        const valorFormatado = row[header] ? `R$ ${parseFloat(row[header]).toFixed(2).replace(".", ",")}` : "";
-                        tableHTML += `<td><input type="text" value="${valorFormatado}" onchange="updateValue(${rowIndex}, '${header}', this.value)"></td>`;
-                    } else if (["observacao"].includes(header)) {
-                        tableHTML += `<td><input type="text" value="${formatValue(row[header])}" onchange="updateValue(${rowIndex}, '${header}', this.value)"></td>`;
-                    } else {
-                        tableHTML += `<td>${formatValue(row[header])}</td>`;
-                    }
-                });
-                tableHTML += `<td><button onclick="saveRow(${rowIndex})">Salvar</button></td>`;
-                tableHTML += "</tr>";
-            });
-
-            tableHTML += "</tbody></table>";
-            return tableHTML;
+            if (status === "concluída") return "highlight-concluded";
+            if (status === "em cotação") return "highlight-quotation";
+            if (status === "cancelada") return "highlight-cancelled";
+            if (isUrgent) return "highlight-urgent";
+            return "";
         }
 
         function updateValue(rowIndex, column, value) {
-            // Formata o valor de 'valor_requisicao' com o símbolo "R$" ao digitar
-            if (column === "valor_requisicao" && value) {
-                value = value.replace("R$", "").trim();
-                value = `R$ ${parseFloat(value).toFixed(2).replace(".", ",")}`;
-            }
+            tableData[rowIndex][column] = value;
+            updateRowStyle(rowIndex);
+        }
 
-            originalData[rowIndex][column] = value;
+        function updateRowStyle(rowIndex) {
+            const row = container.querySelector(`tr[data-index="${rowIndex}"]`);
+            if (!row) return;
 
-            if (column === "status_requisicao") {
-                const rowElement = document.querySelectorAll("tbody tr")[rowIndex];
-                rowElement.classList.remove("highlight-concluded", "highlight-quotation");
-
-                if (value === "concluída") {
-                    rowElement.classList.add("highlight-concluded");
-                } else if (value === "em cotação") {
-                    rowElement.classList.add("highlight-quotation");
-                }
+            row.classList.remove('highlight-urgent', 'highlight-concluded', 'highlight-quotation', 'highlight-cancelled');
+            
+            const newClass = getRowClass(tableData[rowIndex]);
+            if (newClass) {
+                row.classList.add(newClass);
             }
         }
 
+        function generateTableHTML(data) {
+            if (!data.length) return '<p>Nenhum dado encontrado</p>';
+
+            const headers = Object.keys(data[0]);
+            const rows = data.map((row, rowIndex) => {
+                const cells = headers.map(header => {
+                    if (header === "status_requisicao") {
+                        return `<td>
+                            <select onchange="updateValue(${rowIndex}, '${header}', this.value)">
+                                <option value="" ${row[header] === "" ? "selected" : ""}></option>
+                                <option value="em cotação" ${normalizeText(row[header]) === "em cotação" ? "selected" : ""}>Em cotação</option>
+                                <option value="concluída" ${normalizeText(row[header]) === "concluída" ? "selected" : ""}>Concluída</option>
+                                <option value="cancelada" ${normalizeText(row[header]) === "cancelada" ? "selected" : ""}>Cancelada</option>
+                            </select>
+                        </td>`;
+                    } else if (["observacao", "valor_requisicao"].includes(header)) {
+                        return `<td>
+                            <input type="text" 
+                                value="${formatValue(row[header])}" 
+                                onchange="updateValue(${rowIndex}, '${header}', this.value)"
+                            />
+                        </td>`;
+                    }
+                    return `<td>${formatValue(row[header])}</td>`;
+                }).join('');
+
+                return `
+                    <tr class="${getRowClass(row)}" data-index="${rowIndex}">
+                        ${cells}
+                        <td><button onclick="saveRow(${rowIndex})">Salvar</button></td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <table>
+                    <thead>
+                        <tr>
+                            ${headers.map(h => `<th>${h}</th>`).join('')}
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function renderTable(data = tableData) {
+            container.innerHTML = generateTableHTML(data);
+        }
+
         function saveRow(rowIndex) {
-            const row = originalData[rowIndex];
-            fetch(`${apiUrl}?id=eq.${row.id}`, {
+            const row = tableData[rowIndex];
+            fetch(`${CONFIG.apiUrl}?id=eq.${row.id}`, {
                 method: "PATCH",
-                headers: headers,
+                headers: CONFIG.headers,
                 body: JSON.stringify(row)
             })
             .then(response => {
@@ -150,40 +179,38 @@
                     alert("Erro ao salvar os dados.");
                 }
             })
-            .catch(error => console.error("Erro ao salvar os dados:", error));
+            .catch(error => {
+                console.error("Erro ao salvar os dados:", error);
+                alert("Erro ao salvar os dados.");
+            });
         }
 
         function filterTable() {
-            const searchTerm = document.getElementById("search").value.toLowerCase();
-            const filteredData = originalData.filter(row => {
+            const searchTerm = normalizeText(document.getElementById("search").value);
+            const filteredData = tableData.filter(row => {
                 if (!isNaN(searchTerm) && searchTerm !== "") {
-                    // Se for numérico, busca pelo ID
                     return row.id.toString() === searchTerm;
-                } else {
-                    // Busca por palavras nas demais colunas
-                    return Object.values(row).some(value => 
-                        value && value.toString().toLowerCase().includes(searchTerm)
-                    );
                 }
+                return Object.values(row).some(value => 
+                    value && normalizeText(value).includes(searchTerm)
+                );
             });
             renderTable(filteredData);
         }
 
-        function renderTable(data = originalData) {
-            document.getElementById("tabela-container").innerHTML = generateTable(data);
-        }
-
+        // Event Listeners
         document.getElementById("search").addEventListener("input", filterTable);
 
-        fetch(apiUrl, { headers })
+        // Carrega dados iniciais
+        fetch(CONFIG.apiUrl, { headers: CONFIG.headers })
             .then(response => response.json())
             .then(data => {
-                originalData = data;
+                tableData = data;
                 renderTable();
             })
             .catch(error => {
                 console.error("Erro ao obter os dados:", error);
-                document.getElementById("tabela-container").innerHTML = "Erro ao carregar os dados.";
+                container.innerHTML = "Erro ao carregar os dados.";
             });
     </script>
 </body>
