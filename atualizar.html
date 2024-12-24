@@ -20,18 +20,10 @@
             background-color: #000000 !important;
             color: #ffffff !important;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+        .highlight-sent {
+            background-color: #add8e6 !important;
         }
-        th, td {
-            padding: 8px;
-            border: 1px solid #ddd;
-        }
-        tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
+       
     </style>
 </head>
 <body>
@@ -93,6 +85,7 @@
             if (status === "concluída") return "highlight-concluded";
             if (status === "em cotação") return "highlight-quotation";
             if (status === "cancelada") return "highlight-cancelled";
+            if (status === "pedido enviado") return "highlight-sent";
             if (isUrgent) return "highlight-urgent";
             return "";
         }
@@ -106,7 +99,7 @@
             const row = container.querySelector(`tr[data-index="${rowIndex}"]`);
             if (!row) return;
 
-            row.classList.remove('highlight-urgent', 'highlight-concluded', 'highlight-quotation', 'highlight-cancelled');
+            row.classList.remove('highlight-urgent', 'highlight-concluded', 'highlight-quotation', 'highlight-cancelled', 'highlight-sent');
             
             const newClass = getRowClass(tableData[rowIndex]);
             if (newClass) {
@@ -127,6 +120,7 @@
                                 <option value="em cotação" ${normalizeText(row[header]) === "em cotação" ? "selected" : ""}>Em cotação</option>
                                 <option value="concluída" ${normalizeText(row[header]) === "concluída" ? "selected" : ""}>Concluída</option>
                                 <option value="cancelada" ${normalizeText(row[header]) === "cancelada" ? "selected" : ""}>Cancelada</option>
+                                <option value="pedido enviado" ${normalizeText(row[header]) === "pedido enviado" ? "selected" : ""}>Pedido Enviado</option>
                             </select>
                         </td>`;
                     } else if (["observacao", "valor_requisicao"].includes(header)) {
