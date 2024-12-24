@@ -23,7 +23,6 @@
         .highlight-sent {
             background-color: #add8e6 !important;
         }
-       
     </style>
 </head>
 <body>
@@ -123,7 +122,14 @@
                                 <option value="pedido enviado" ${normalizeText(row[header]) === "pedido enviado" ? "selected" : ""}>Pedido Enviado</option>
                             </select>
                         </td>`;
-                    } else if (["observacao", "valor_requisicao"].includes(header)) {
+                    } else if (header === "observacao") {
+                        return `<td>
+                            <textarea 
+                                style="width: 100%; height: 40px;" 
+                                onchange="updateValue(${rowIndex}, '${header}', this.value)"
+                            >${formatValue(row[header])}</textarea>
+                        </td>`;
+                    } else if (header === "valor_requisicao") {
                         return `<td>
                             <input type="text" 
                                 value="${formatValue(row[header])}" 
