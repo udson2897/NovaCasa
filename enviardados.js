@@ -12,14 +12,14 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const form = document.getElementById('form');
 const itensAdicionados = document.getElementById('itensAdicionados');
 
-// Função auxiliar para coletar itens selecionados dinamicamente
+// Função auxiliar para coletar itens selecionados dinamicamente e retornar como string
 function getListaDeItens() {
   const itens = [];
   const lista = itensAdicionados.querySelectorAll('li');
   lista.forEach((item) => {
     itens.push(item.textContent.replace('Remover', '').trim());
   });
-  return itens;
+  return itens.join(', '); // Converte o array em uma string separada por vírgulas
 }
 
 // Evento de envio do formulário
@@ -32,7 +32,7 @@ form.addEventListener('submit', async (event) => {
   const dadosFormulario = {
     tipo_requisicao: formData.get('tipo_requisicao'),
     descricao: formData.get('descricao') || null,
-    produto: getListaDeItens(), // Itens selecionados
+    produto: getListaDeItens(), // Itens selecionados como string
     urgente: formData.get('urgente'),
     filial: formData.get('filial'),
     comprador: formData.get('comprador'),
