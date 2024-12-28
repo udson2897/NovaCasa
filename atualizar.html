@@ -122,16 +122,21 @@
                                 <option value="pedido enviado" ${normalizeText(row[header]) === "pedido enviado" ? "selected" : ""}>Pedido Enviado</option>
                             </select>
                         </td>`;
-                    } else if (header === "observacao") {
-                        return `<td>
-                            <textarea 
-                                style="width: 100%; height: 40px;" 
-                                onchange="updateValue(${rowIndex}, '${header}', this.value)"
-                            >${formatValue(row[header])}</textarea>
-                        </td>`;
                     } else if (header === "valor_requisicao") {
                         return `<td>
-                            <input type="text" 
+                            <input type="number" 
+                                value="${formatValue(row[header])}" 
+                                onchange="updateValue(${rowIndex}, '${header}', this.value)" 
+                                max="100000" 
+                                step="0.01"
+                                style="width: 120px; text-align: right;"
+                                placeholder="0,00"
+                            />
+                        </td>`;
+                    } else if (header === "previsao_entrega" || header === "data_entrega") {
+                        const inputType = "date";
+                        return `<td>
+                            <input type="${inputType}" 
                                 value="${formatValue(row[header])}" 
                                 onchange="updateValue(${rowIndex}, '${header}', this.value)"
                             />
@@ -153,7 +158,7 @@
                     <thead>
                         <tr>
                             ${headers.map(h => `<th>${h}</th>`).join('')}
-                            <th>Ações</th>
+                            <th>ações</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
